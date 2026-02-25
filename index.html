@@ -401,7 +401,7 @@
                 
                 const sheetId = sheetIdMatch[1];
                 
-                // Use TableTop approach with CORS proxy
+                // Use CSV export method instead of JSON approach
                 await fetchGoogleSheetData(sheetId);
                 
             } catch (error) {
@@ -410,44 +410,95 @@
             }
         }
 
-        // Fetch data from Google Sheet using TableTop approach
+        // Fetch data from Google Sheet using CSV export
         async function fetchGoogleSheetData(sheetId) {
             try {
-                // Using a CORS proxy to bypass restrictions
-                const proxyUrl = 'https://api.allorigins.win/raw?url=';
-                const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+                // Alternative approach: Use CSV export
+                const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
                 
-                const response = await fetch(proxyUrl + encodeURIComponent(sheetUrl));
-                const text = await response.text();
+                // Try multiple CORS proxies with fallbacks
+                const proxies = [
+                    'https://corsproxy.io/?',
+                    'https://api.codetabs.com/v1/proxy?quest=',
+                    'https://cors-anywhere.herokuapp.com/'
+                ];
                 
-                // Extract JSON from Google's response
-                const jsonString = text.match(/google.visualization.Query.setResponse\(({.*})\);/);
-                if (!jsonString) {
-                    throw new Error('Invalid response format');
+                let response;
+                let lastError;
+                
+                // Try each proxy until one works
+                for (const proxy of proxies) {
+                    try {
+                        const proxyUrl = proxy + encodeURIComponent(csvUrl);
+                        response = await fetch(proxyUrl, {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'text/csv'
+                            }
+                        });
+                        
+                        if (response.ok) break;
+                    } catch (err) {
+                        lastError = err;
+                        console.log(`Proxy ${proxy} failed, trying next...`);
+                        continue;
+                    }
                 }
                 
-                const data = JSON.parse(jsonString[1]);
-                const rows = data.table.rows;
-                const cols = data.table.cols.map(col => col.label);
+                if (!response || !response.ok) {
+                    throw new Error('All proxies failed: ' + (lastError?.message || 'Unknown error'));
+                }
                 
-                // Convert to array of objects
-                currentData = rows.map(row => {
-                    const obj = {};
-                    row.c.forEach((cell, index) => {
-                        obj[cols[index]] = cell ? cell.v : '';
-                    });
-                    return obj;
-                });
+                const csvText = await response.text();
+                currentData = parseCSV(csvText);
                 
                 console.log('Data loaded:', currentData);
                 showConnectionMessage('Successfully connected to Google Sheet!', 'success');
                 
                 // Clear previous results
                 resultsContainer.innerHTML = '<p style="text-align: center; color: #7f8c8d; padding: 40px;">Search for remedies to see results</p>';
+                
             } catch (error) {
                 console.error('Data fetch error:', error);
-                showConnectionMessage('Failed to load data from Google Sheet. Please ensure the sheet is published to the web.', 'error');
+                // Fallback to sample data for demo purposes
+                showConnectionMessage('Using sample data. For Google Sheets, ensure your sheet is published to web.', 'error');
+                useSampleData();
             }
+        }
+
+        // Parse CSV data into array of objects
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n').filter(line => line.trim());
+            if (lines.length < 2) return [];
+            
+            const headers = lines[0].split(',').map(h => h.trim());
+            const data = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim());
+                const obj = {};
+                
+                headers.forEach((header, index) => {
+                    obj[header] = values[index] || '';
+                });
+                
+                data.push(obj);
+            }
+            
+            return data;
+        }
+
+        // Use sample data as fallback
+        function useSampleData() {
+            const sampleData = [
+                { "Remedy Name": "Aconitum Napellus", "Potency": "30C", "BOX Number": "B12", "Type": "Tincture", "Bottle Size": "30ml", "BottleCapColor": "Blue", "Manufacturer Brand": "Boiron", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
+                { "Remedy Name": "Apis Mellifica", "Potency": "200C", "BOX Number": "B07", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Red", "Manufacturer Brand": "Hyland's", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
+                { "Remedy Name": "Arnica Montana", "Potency": "30C", "BOX Number": "B03", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Green", "Manufacturer Brand": "Boiron", "Available": "No", "Reorder Y/N": "Yes", "Reorder Date": "2023-08-15" },
+                { "Remedy Name": "Belladonna", "Potency": "30C", "BOX Number": "B15", "Type": "Tincture", "Bottle Size": "30ml", "BottleCapColor": "Purple", "Manufacturer Brand": "Washington Homeopathics", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" }
+            ];
+            
+            currentData = sampleData;
+            displayResults(sampleData);
         }
 
         // Show connection status message
@@ -604,17 +655,8 @@
             });
         }
 
-        // Initialize with sample results for demonstration
-        const sampleData = [
-            { "Remedy Name": "Aconitum Napellus", "Potency": "30C", "BOX Number": "B12", "Type": "Tincture", "Bottle Size": "30ml", "BottleCapColor": "Blue", "Manufacturer Brand": "Boiron", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
-            { "Remedy Name": "Apis Mellifica", "Potency": "200C", "BOX Number": "B07", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Red", "Manufacturer Brand": "Hyland's", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
-            { "Remedy Name": "Arnica Montana", "Potency": "30C", "BOX Number": "B03", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Green", "Manufacturer Brand": "Boiron", "Available": "No", "Reorder Y/N": "Yes", "Reorder Date": "2023-08-15" },
-            { "Remedy Name": "Belladonna", "Potency": "30C", "BOX Number": "B15", "Type": "Tincture", "Bottle Size": "30ml", "BottleCapColor": "Purple", "Manufacturer Brand": "Washington Homeopathics", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" }
-        ];
-        
-        // Set sample data initially for demonstration
-        currentData = sampleData;
-        displayResults(sampleData);
+        // Initialize with sample data for demonstration
+        useSampleData();
     </script>
 </body>
 </html>
