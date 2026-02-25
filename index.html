@@ -19,10 +19,11 @@
             min-height: 100vh;
             padding: 20px;
             color: #333;
+            transition: background-color 0.5s ease;
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
         
@@ -112,37 +113,68 @@
             margin-right: 8px;
         }
         
-        .results-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+        .accordion {
             margin-top: 20px;
+            max-height: 600px;
+            overflow-y: auto;
         }
         
-        .result-card {
+        .accordion-item {
             background: white;
-            border-radius: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            transition: transform 0.3s ease;
             cursor: pointer;
+            border-left: 4px solid #3498db;
         }
         
-        .result-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-        
-        .card-header {
-            background: #3498db;
-            color: white;
+        .accordion-header {
             padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             font-weight: 600;
-            font-size: 1.1rem;
+            transition: background 0.3s ease;
         }
         
-        .card-body {
+        .accordion-header.available {
+            background: #d4edda; /* Light green for available */
+        }
+        
+        .accordion-header.unavailable {
+            background: #f8d7da; /* Light red for unavailable */
+        }
+        
+        .accordion-header.active {
+            background: #e3f2fd;
+        }
+        
+        .accordion-content {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+        
+        .accordion-content.active {
             padding: 15px;
+            max-height: 500px;
+        }
+        
+        .accordion-details {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        
+        .accordion-main-info {
+            flex: 1;
+        }
+        
+        .accordion-secondary-info {
+            text-align: right;
+            color: #7f8c8d;
         }
         
         .info-row {
@@ -203,8 +235,8 @@
         
         .iframe-wrapper {
             width: 90%;
-            max-width: 900px;
-            height: 80%;
+            max-width: 1000px;
+            height: 85%;
             background: white;
             border-radius: 10px;
             overflow: hidden;
@@ -262,12 +294,15 @@
             font-weight: 500;
         }
         
-        .status-message {
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            text-align: center;
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 10px 15px;
+            border-radius: 5px;
             font-weight: 500;
+            z-index: 999;
+            display: none;
         }
         
         .status-success {
@@ -282,10 +317,65 @@
             border: 1px solid #f5c6cb;
         }
         
-        .status-loading {
-            background: #cce5ff;
-            color: #004085;
-            border: 1px solid #b8daff;
+        .data-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .data-section {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .info-section {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-section h3 {
+            color: #3498db;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .info-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .info-content iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 5px;
+        }
+        
+        .remedy-info {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .remedy-info:last-child {
+            border-bottom: none;
+        }
+        
+        .no-remedy-selected {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 40px 20px;
         }
         
         @media (max-width: 768px) {
@@ -297,14 +387,25 @@
                 width: 100%;
             }
             
-            .results-container {
-                grid-template-columns: 1fr;
+            .data-container {
+                flex-direction: column;
             }
+        }
+        
+        .search-summary {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #7f8c8d;
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <div class="connection-status" id="connectionStatus"></div>
+        
         <header>
             <h1><i class="fas fa-prescription-bottle-alt"></i> Remedy Search Application</h1>
             <p class="subtitle">Search homeopathic remedies from your Google Sheet database and view detailed information</p>
@@ -312,108 +413,96 @@
         
         <main>
             <div class="card">
-                <h2 class="section-title"><i class="fas fa-database"></i> Connect to Data Source</h2>
-                <div class="input-group">
-                    <input type="text" id="sheetUrl" placeholder="Paste Google Sheet URL here...">
-                    <button id="connectBtn"><i class="fas fa-plug"></i> Connect</button>
-                </div>
-                <div id="connectionStatus"></div>
-            </div>
-            
-            <div class="card">
                 <h2 class="section-title"><i class="fas fa-search"></i> Search Remedies</h2>
-                <div class="input-group">
-                    <input type="text" id="searchInput" placeholder="Enter remedies (e.g. Aconite30, Selenium 200)">
-                    <button id="searchBtn"><i class="fas fa-search"></i> Search</button>
-                </div>
-                
                 <div class="instructions">
                     <h3>Search Instructions:</h3>
                     <ul>
                         <li>Enter remedies as comma-separated pairs: <span class="highlight">Aconite30, Selenium 200</span></li>
-                        <li>Search formats supported: <span class="highlight">Aconitum30</span>, <span class="highlight">Aconitum 30</span>, <span class="highlight">Aconitum N.30</span>, <span class="highlight">Aconitum Napellus 30</span></li>
-                        <li>If only potency is entered (e.g. <span class="highlight">30</span>, <span class="highlight">200</span>, <span class="highlight">1M</span>), all available remedies with that potency will be shown</li>
-                        <li>If only first name is entered, all remedies starting with that name will be displayed</li>
+                        <li>Search for remedies that <strong>start with</strong> the entered text</li>
                     </ul>
+
+                    <div class="input-group">
+                        <input type="text" id="searchInput" placeholder="Enter remedies (e.g. Aconite30, Selenium 200)">
+                        <button id="searchBtn"><i class="fas fa-search"></i> Search</button>
+                    </div>
                 </div>
             </div>
             
-            <div class="card">
-                <h2 class="section-title"><i class="fas fa-list"></i> Search Results</h2>
-                <div class="results-container" id="resultsContainer">
-                    <!-- Results will be populated here -->
-                    <div class="placeholder">
-                        <p style="text-align: center; color: #7f8c8d; padding: 40px;">Connect to a Google Sheet and search for remedies to see results here</p>
+            <div class="data-container">
+                <div class="data-section">
+                    <div class="card">
+                        <h2 class="section-title"><i class="fas fa-list"></i> Search Results <span id="resultsCount" class="accordion-count">(0 results)</span></h2>
+                        <div id="searchSummary"></div>
+                        <div class="accordion" id="resultsContainer">
+                            <!-- Results will be populated here as accordion items -->
+                            <div class="no-remedy-selected">
+                                <p>Search for remedies to see results here</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3><i class="fas fa-info-circle"></i> Remedy Details</h3>
+                    <div class="info-content" id="remedyInfo">
+                        <div class="no-remedy-selected">
+                            <p>Select a remedy to view detailed information</p>
+                        </div>
+                    </div>
+                    <div class="instructions">
+                        <p><strong>Note:</strong> Detailed information is only available for in-stock remedies.</p>
                     </div>
                 </div>
             </div>
         </main>
     </div>
-    
-    <div class="iframe-container" id="iframeContainer">
-        <div class="close-btn" id="closeIframe"><i class="fas fa-times"></i></div>
-        <div class="iframe-wrapper">
-            <iframe id="detailFrame" src=""></iframe>
-        </div>
-    </div>
 
     <script>
         // DOM Elements
-        const connectBtn = document.getElementById('connectBtn');
         const searchBtn = document.getElementById('searchBtn');
-        const sheetUrlInput = document.getElementById('sheetUrl');
         const searchInput = document.getElementById('searchInput');
         const resultsContainer = document.getElementById('resultsContainer');
-        const iframeContainer = document.getElementById('iframeContainer');
-        const detailFrame = document.getElementById('detailFrame');
-        const closeIframe = document.getElementById('closeIframe');
+        const remedyInfo = document.getElementById('remedyInfo');
+        const resultsCount = document.getElementById('resultsCount');
+        const searchSummary = document.getElementById('searchSummary');
         const connectionStatus = document.getElementById('connectionStatus');
+        const body = document.body;
 
         // State
         let currentData = [];
+        let currentResults = [];
+        let isConnected = false;
+        let activeAccordion = null;
+        let selectedRemedyUrl = '';
+        
+        // Hardcoded Google Sheet URL
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/11aZgt8hafBHfu0ZHeuyQH_MS09791YHXy_r-7LWc8KM/edit?usp=sharing';
 
         // Event Listeners
-        connectBtn.addEventListener('click', connectToSheet);
-        searchBtn.addEventListener('click', performSearch);
-        closeIframe.addEventListener('click', () => {
-            iframeContainer.classList.remove('active');
+        searchBtn.addEventListener('click', () => performSearch(true));
+        
+        // Type-ahead search
+        searchInput.addEventListener('input', () => {
+            performSearch(false);
         });
 
-        // Connect to Google Sheet
-        async function connectToSheet() {
-            const url = sheetUrlInput.value.trim();
-            
-            if (!url) {
-                showConnectionMessage('Please enter a Google Sheet URL', 'error');
-                return;
-            }
-            
-            // Show loading message
-            showConnectionMessage('Connecting to Google Sheet...', 'loading');
-            
+        // Load Google Sheet data on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchGoogleSheetData();
+        });
+
+        // Fetch data from Google Sheet using CSV export
+        async function fetchGoogleSheetData() {
             try {
                 // Extract sheet ID from URL
-                const sheetIdMatch = url.match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+                const sheetIdMatch = SHEET_URL.match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
                 if (!sheetIdMatch) {
-                    showConnectionMessage('Invalid Google Sheet URL format', 'error');
-                    return;
+                    throw new Error('Invalid Google Sheet URL format');
                 }
                 
                 const sheetId = sheetIdMatch[1];
                 
-                // Use CSV export method instead of JSON approach
-                await fetchGoogleSheetData(sheetId);
-                
-            } catch (error) {
-                console.error('Connection error:', error);
-                showConnectionMessage('Failed to connect to Google Sheet. Please check the URL and ensure it\'s publicly accessible.', 'error');
-            }
-        }
-
-        // Fetch data from Google Sheet using CSV export
-        async function fetchGoogleSheetData(sheetId) {
-            try {
-                // Alternative approach: Use CSV export
+                // Try CSV export method
                 const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
                 
                 // Try multiple CORS proxies with fallbacks
@@ -453,15 +542,24 @@
                 currentData = parseCSV(csvText);
                 
                 console.log('Data loaded:', currentData);
-                showConnectionMessage('Successfully connected to Google Sheet!', 'success');
+                isConnected = true;
                 
-                // Clear previous results
-                resultsContainer.innerHTML = '<p style="text-align: center; color: #7f8c8d; padding: 40px;">Search for remedies to see results</p>';
+                // Update UI for successful connection
+                body.style.backgroundColor = '#f0fff4'; // Light green background
+                connectionStatus.textContent = '✓ Successfully connected to Google Sheet';
+                connectionStatus.className = 'connection-status status-success';
+                connectionStatus.style.display = 'block';
                 
             } catch (error) {
                 console.error('Data fetch error:', error);
-                // Fallback to sample data for demo purposes
-                showConnectionMessage('Using sample data. For Google Sheets, ensure your sheet is published to web.', 'error');
+                
+                // Update UI for failed connection
+                body.style.backgroundColor = '#fff5f5'; // Light red background
+                connectionStatus.textContent = '✗ Failed to connect to Google Sheet';
+                connectionStatus.className = 'connection-status status-error';
+                connectionStatus.style.display = 'block';
+                
+                // Fallback to sample data
                 useSampleData();
             }
         }
@@ -491,37 +589,34 @@
         // Use sample data as fallback
         function useSampleData() {
             const sampleData = [
-                { "Remedy Name": "Aconitum Napellus", "Potency": "30C", "BOX Number": "B12", "Type": "Tincture", "Bottle Size": "30ml", "BottleCapColor": "Blue", "Manufacturer Brand": "Boiron", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
-                { "Remedy Name": "Apis Mellifica", "Potency": "200C", "BOX Number": "B07", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Red", "Manufacturer Brand": "Hyland's", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
-                { "Remedy Name": "Arnica Montana", "Potency": "30C", "BOX Number": "B03", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Green", "Manufacturer Brand": "Boiron", "Available": "No", "Reorder Y/N": "Yes", "Reorder Date": "2023-08-15" },
-                { "Remedy Name": "Belladonna", "Potency": "30C", "BOX Number": "B15", "Type": "Tincture", "Bottle Size": "30ml", "BottleCapColor": "Purple", "Manufacturer Brand": "Washington Homeopathics", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" }
+                { "Remedy Name": "Aconitum Napellus", "Potency": "30C", "BOX Number": "B12", "Type": "Tincture", "Bottle Size": "30ml", "BottleCapColor": "Blue", "Manufacturer Brand": "Boiron", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "", "Section": "A-1" },
+                { "Remedy Name": "Apis Mellifica", "Potency": "200C", "BOX Number": "B07", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Red", "Manufacturer Brand": "Hyland's", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "", "Section": "A-2" },
+                { "Remedy Name": "Arnica Montana", "Potency": "30C", "BOX Number": "B03", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Green", "Manufacturer Brand": "Boiron", "Available": "No", "Reorder Y/N": "Yes", "Reorder Date": "2023-08-15", "Section": "B-1" },
+                { "Remedy Name": "Belladonna", "Potency": "30C", "BOX Number": "B15", "Type": "Tincture", "Bottle Size": "30ml", "BottleCapColor": "Purple", "Manufacturer Brand": "Washington Homeopathics", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "", "Section": "B-2" },
+                { "Remedy Name": "Bryonia Alba", "Potency": "200C", "BOX Number": "B09", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Orange", "Manufacturer Brand": "Boiron", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "", "Section": "C-1" },
+                { "Remedy Name": "Calcarea Carbonica", "Potency": "1M", "BOX Number": "B22", "Type": "Pellets", "Bottle Size": "30ml", "BottleCapColor": "White", "Manufacturer Brand": "Hyland's", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "", "Section": "C-2" },
+                { "Remedy Name": "Camphora", "Potency": "30C", "BOX Number": "B18", "Type": "Tincture", "Bottle Size": "15ml", "BottleCapColor": "Yellow", "Manufacturer Brand": "Washington Homeopathics", "Available": "No", "Reorder Y/N": "Yes", "Reorder Date": "2023-09-01", "Section": "D-1" },
+                { "Remedy Name": "Cantharis", "Potency": "30C", "BOX Number": "B05", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Black", "Manufacturer Brand": "Boiron", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "", "Section": "D-2" },
+                { "Remedy Name": "Chamomilla", "Potency": "200C", "BOX Number": "B11", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Pink", "Manufacturer Brand": "Hyland's", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "", "Section": "E-1" },
+                { "Remedy Name": "Ignatia Amara", "Potency": "30C", "BOX Number": "B14", "Type": "Tincture", "Bottle Size": "30ml", "BottleCapColor": "Brown", "Manufacturer Brand": "Washington Homeopathics", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "", "Section": "E-2" }
             ];
             
             currentData = sampleData;
-            displayResults(sampleData);
+            isConnected = false;
+            performSearch(false);
         }
 
-        // Show connection status message
-        function showConnectionMessage(message, type) {
-            connectionStatus.innerHTML = `<div class="status-message status-${type}">${message}</div>`;
-            if (type !== 'loading') {
-                setTimeout(() => {
-                    connectionStatus.innerHTML = '';
-                }, 5000);
-            }
-        }
-
-        // Perform search
-        function performSearch() {
+        // Perform search (show both in-stock and out-of-stock remedies)
+        function performSearch(showAlert) {
             const searchTerm = searchInput.value.trim();
             
-            if (!searchTerm) {
+            if (showAlert && !searchTerm) {
                 alert('Please enter search terms');
                 return;
             }
             
             if (currentData.length === 0) {
-                alert('Please connect to a Google Sheet first');
+                if (showAlert) alert('Please wait for data to load');
                 return;
             }
             
@@ -559,18 +654,20 @@
                 // Clean up name
                 name = name.replace(/\./g, '').trim();
                 
-                // Search in data
+                // Search in data - Include all remedies (both in-stock and out-of-stock)
                 const matches = currentData.filter(item => {
                     const itemName = item['Remedy Name'] ? item['Remedy Name'].toLowerCase().replace(/\./g, '') : '';
                     const itemPotency = item['Potency'] ? item['Potency'].toLowerCase() : '';
                     
                     // If both name and potency are provided
                     if (name && potency) {
-                        return itemName.includes(name.toLowerCase()) && itemPotency === potency.toLowerCase();
+                        // Search from the beginning of the name (not substring)
+                        return itemName.toLowerCase().startsWith(name.toLowerCase()) && itemPotency === potency.toLowerCase();
                     }
                     // If only name is provided
                     else if (name) {
-                        return itemName.includes(name.toLowerCase());
+                        // Search from the beginning of the name (not substring)
+                        return itemName.toLowerCase().startsWith(name.toLowerCase());
                     }
                     // If only potency is provided
                     else if (potency) {
@@ -587,35 +684,60 @@
                 index === self.findIndex(t => t['Remedy Name'] === item['Remedy Name'] && t['Potency'] === item['Potency'])
             );
             
+            currentResults = results;
+            activeAccordion = null;
             displayResults(results);
+            updateRemedyInfo();
+            updateSearchSummary(results);
         }
 
-        // Display search results
+        // Update search summary
+        function updateSearchSummary(results) {
+            const inStockCount = results.filter(item => item['Available'] === 'Yes').length;
+            const outOfStockCount = results.filter(item => item['Available'] !== 'Yes').length;
+            
+            searchSummary.innerHTML = `
+                <div class="search-summary">
+                    Found ${results.length} remedy(s): 
+                    <span class="available-yes">${inStockCount} in stock</span>, 
+                    <span class="available-no">${outOfStockCount} out of stock</span>
+                </div>
+            `;
+        }
+
+        // Display search results as accordion
         function displayResults(results) {
+            resultsCount.textContent = `(${results.length} remedies)`;
+            
             if (results.length === 0) {
-                resultsContainer.innerHTML = '<p style="text-align: center; color: #e74c3c; padding: 40px;">No matching remedies found</p>';
+                resultsContainer.innerHTML = '<div class="no-remedy-selected"><p>No matching remedies found</p></div>';
                 return;
             }
             
             resultsContainer.innerHTML = '';
             
-            results.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'result-card';
+            results.forEach((item, index) => {
+                const accordionItem = document.createElement('div');
+                accordionItem.className = 'accordion-item';
                 
-                const reorderDate = item['Reorder Date'] ? `<span class="reorder-date">${item['Reorder Date']}</span>` : 'N/A';
-                const availableClass = item['Available'] === 'Yes' ? 'available-yes' : 'available-no';
-                const availableText = item['Available'] === 'Yes' ? 'In Stock' : 'Out of Stock';
+                const needsReorder = item['Reorder Y/N'] === 'Yes' ? '<span style="color:#e74c3c;font-weight:600">(Needs Reorder)</span>' : '';
+                const isAvailable = item['Available'] === 'Yes';
+                const headerClass = isAvailable ? 'available' : 'unavailable';
                 
-                card.innerHTML = `
-                    <div class="card-header">
-                        ${item['Remedy Name']} ${item['Potency']}
-                    </div>
-                    <div class="card-body">
-                        <div class="info-row">
-                            <span class="label">BOX #:</span>
-                            <span class="value">${item['BOX Number'] || 'N/A'}</span>
+                accordionItem.innerHTML = `
+                    <div class="accordion-header ${headerClass}">
+                        <div class="accordion-details">
+                            <div class="accordion-main-info">
+                                ${item['Remedy Name']} ${item['Potency']}
+                                ${isAvailable ? '<span class="available-yes">(Available)</span>' : '<span class="available-no">(Out of Stock)</span>'}
+                            </div>
+                            <div class="accordion-secondary-info">
+                                Box: ${item['BOX Number'] || 'N/A'} | Section: ${item['Section'] || 'N/A'}
+                            </div>
                         </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="accordion-content">
                         <div class="info-row">
                             <span class="label">Type:</span>
                             <span class="value">${item['Type'] || 'N/A'}</span>
@@ -633,30 +755,85 @@
                             <span class="value">${item['Manufacturer Brand'] || 'N/A'}</span>
                         </div>
                         <div class="info-row">
-                            <span class="label">Available:</span>
-                            <span class="value ${availableClass}">${availableText}</span>
+                            <span class="label">Reorder Date:</span>
+                            <span class="value">${item['Reorder Date'] || 'N/A'}</span>
                         </div>
                         <div class="info-row">
-                            <span class="label">Reorder Date:</span>
-                            <span class="value">${reorderDate}</span>
+                            <span class="label">Status:</span>
+                            <span class="value">${needsReorder || 'No reorder needed'}</span>
                         </div>
                     </div>
                 `;
                 
-                // Add click event to open detail page
-                card.addEventListener('click', () => {
-                    const remedyName = item['Remedy Name'] ? item['Remedy Name'].toLowerCase().replace(/\s+/g, '-') : '';
-                    const detailUrl = `https://www.materiamedica.info/en/materia-medica/john-henry-clarke/${remedyName}`;
-                    detailFrame.src = detailUrl;
-                    iframeContainer.classList.add('active');
+                // Add click event to toggle accordion
+                const header = accordionItem.querySelector('.accordion-header');
+                header.addEventListener('click', () => {
+                    // Close previous active accordion
+                    if (activeAccordion && activeAccordion !== accordionItem) {
+                        activeAccordion.querySelector('.accordion-header').classList.remove('active');
+                        activeAccordion.querySelector('.accordion-content').classList.remove('active');
+                        activeAccordion.querySelector('.fa-chevron-down').classList.remove('fa-rotate-180');
+                    }
+                    
+                    // Toggle current accordion
+                    const isActive = header.classList.contains('active');
+                    
+                    if (isActive) {
+                        header.classList.remove('active');
+                        accordionItem.querySelector('.accordion-content').classList.remove('active');
+                        accordionItem.querySelector('.fa-chevron-down').classList.remove('fa-rotate-180');
+                        activeAccordion = null;
+                        updateRemedyInfo();
+                    } else {
+                        header.classList.add('active');
+                        accordionItem.querySelector('.accordion-content').classList.add('active');
+                        accordionItem.querySelector('.fa-chevron-down').classList.add('fa-rotate-180');
+                        activeAccordion = accordionItem;
+                        updateRemedyInfo(item);
+                    }
                 });
                 
-                resultsContainer.appendChild(card);
+                resultsContainer.appendChild(accordionItem);
             });
         }
 
+        // Update remedy info panel with URL content
+        function updateRemedyInfo(item = null) {
+            if (!item) {
+                remedyInfo.innerHTML = '<div class="no-remedy-selected"><p>Select a remedy to view detailed information</p></div>';
+                selectedRemedyUrl = '';
+                return;
+            }
+            
+            // Only show detailed info for in-stock remedies
+            if (item['Available'] !== 'Yes') {
+                remedyInfo.innerHTML = `
+                    <div class="remedy-info">
+                        <h4>${item['Remedy Name']} ${item['Potency']}</h4>
+                        <p><strong>Status:</strong> <span class="available-no">Out of Stock</span></p>
+                        <p>Detailed information is only available for in-stock remedies.</p>
+                    </div>
+                `;
+                selectedRemedyUrl = '';
+                return;
+            }
+            
+            // Generate URL for remedy details
+            const remedyName = item['Remedy Name'] ? item['Remedy Name'].toLowerCase().replace(/\s+/g, '-') : '';
+            selectedRemedyUrl = `https://www.materiamedica.info/en/materia-medica/john-henry-clarke/${remedyName}`;
+            
+            // Display the URL content directly in an iframe
+            remedyInfo.innerHTML = `
+                <div class="remedy-info">
+                    <h4>${item['Remedy Name']} ${item['Potency']}</h4>
+                    <p><strong>Online Reference:</strong> <a href="${selectedRemedyUrl}" target="_blank">${selectedRemedyUrl}</a></p>
+                </div>
+                <iframe src="${selectedRemedyUrl}"></iframe>
+            `;
+        }
+
         // Initialize with sample data for demonstration
-        useSampleData();
+        // This will be overridden by fetchGoogleSheetData() on load
     </script>
 </body>
 </html>
