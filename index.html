@@ -404,29 +404,22 @@
 </head>
 <body>
     <div class="container">
-        <div class="connection-status" id="connectionStatus"></div>
+    
         
         <header>
-            <h1><i class="fas fa-prescription-bottle-alt"></i> Remedy Search Application</h1>
-            <p class="subtitle">Search homeopathic remedies from your database and view detailed information</p>
+            <h1><i class="fas fa-prescription-bottle-alt"></i> Fremont Gurdwara-Homeopathic Remedy Searcher</h1>
         </header>
+    <div class="connection-status" id="connectionStatus"></div>
         
         <main>
-            <div class="card">
-                <h2 class="section-title"><i class="fas fa-search"></i> Search Remedies</h2>
-                <div class="instructions">
-                    <h3>Search Instructions:</h3>
-                    <ul>
-                        <li>Enter remedies as comma-separated pairs: <span class="highlight">Aconite30, Selenium 200</span></li>
-                        <li>Search for remedies that <strong>start with</strong> the entered text</li>
-                    </ul>
+                 <div class="instructions">
 
                     <div class="input-group">
                         <input type="text" id="searchInput" placeholder="Enter remedies (e.g. Aconite30, Selenium 200)">
                         <button id="searchBtn"><i class="fas fa-search"></i> Search</button>
                     </div>
                 </div>
-            </div>
+            
             
             <div class="data-container">
                 <div class="data-section">
@@ -449,9 +442,7 @@
                             <p>Select a remedy to view detailed information</p>
                         </div>
                     </div>
-                    <div class="instructions">
-                        <p><strong>Note:</strong> Detailed information is only available for in-stock remedies.</p>
-                    </div>
+                    
                 </div>
             </div>
         </main>
@@ -546,7 +537,7 @@
                 
                 // Update UI for successful connection
                 body.style.backgroundColor = '#f0fff4'; // Light green background
-                connectionStatus.textContent = '✓ Successfully connected to Data Source';
+                connectionStatus.textContent = '✓ Data Source connected';
                 connectionStatus.className = 'connection-status status-success';
                 connectionStatus.style.display = 'block';
                 
@@ -555,7 +546,7 @@
                 
                 // Update UI for failed connection
                 body.style.backgroundColor = '#fff5f5'; // Light red background
-                connectionStatus.textContent = '✗ Failed to connect to Data Source';
+                connectionStatus.textContent = '✗ Data Source Connection Failed';
                 connectionStatus.className = 'connection-status status-error';
                 connectionStatus.style.display = 'block';
                 
