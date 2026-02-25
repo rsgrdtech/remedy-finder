@@ -331,18 +331,45 @@
 
     <script>
         // Sample data simulating Google Sheet data
-        const sampleData = [
-            { "Remedy Name": "Aconitum Napellus", "Potency": "30C", "BOX Number": "B12", "Type": "Tincture", "Bottle Size": "30ml", "BottleCapColor": "Blue", "Manufacturer Brand": "Boiron", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
-            { "Remedy Name": "Apis Mellifica", "Potency": "200C", "BOX Number": "B07", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Red", "Manufacturer Brand": "Hyland's", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
-            { "Remedy Name": "Arnica Montana", "Potency": "30C", "BOX Number": "B03", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Green", "Manufacturer Brand": "Boiron", "Available": "No", "Reorder Y/N": "Yes", "Reorder Date": "2023-08-15" },
-            { "Remedy Name": "Belladonna", "Potency": "30C", "BOX Number": "B15", "Type": "Tincture", "Bottle Size": "30ml", "BottleCapColor": "Purple", "Manufacturer Brand": "Washington Homeopathics", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
-            { "Remedy Name": "Bryonia Alba", "Potency": "200C", "BOX Number": "B09", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Orange", "Manufacturer Brand": "Boiron", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
-            { "Remedy Name": "Calcarea Carbonica", "Potency": "1M", "BOX Number": "B22", "Type": "Pellets", "Bottle Size": "30ml", "BottleCapColor": "White", "Manufacturer Brand": "Hyland's", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
-            { "Remedy Name": "Camphora", "Potency": "30C", "BOX Number": "B18", "Type": "Tincture", "Bottle Size": "15ml", "BottleCapColor": "Yellow", "Manufacturer Brand": "Washington Homeopathics", "Available": "No", "Reorder Y/N": "Yes", "Reorder Date": "2023-09-01" },
-            { "Remedy Name": "Cantharis", "Potency": "30C", "BOX Number": "B05", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Black", "Manufacturer Brand": "Boiron", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
-            { "Remedy Name": "Chamomilla", "Potency": "200C", "BOX Number": "B11", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Pink", "Manufacturer Brand": "Hyland's", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
-            { "Remedy Name": "Ignatia Amara", "Potency": "30C", "BOX Number": "B14", "Type": "Tincture", "Bottle Size": "30ml", "BottleCapColor": "Brown", "Manufacturer Brand": "Washington Homeopathics", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" }
+        //const sampleData = [
+          //  { "Remedy Name": "Aconitum Napellus", "Potency": "30C", "BOX Number": "B12", "Type": "Tincture", "Bottle Size": "30ml", "BottleCapColor": "Blue", "Manufacturer Brand": "Boiron", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
+ //           { "Remedy Name": "Apis Mellifica", "Potency": "200C", "BOX Number": "B07", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Red", "Manufacturer Brand": "Hyland's", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
+   //         { "Remedy Name": "Arnica Montana", "Potency": "30C", "BOX Number": "B03", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Green", "Manufacturer Brand": "Boiron", "Available": "No", "Reorder Y/N": "Yes", "Reorder Date": "2023-08-15" },
+     //       { "Remedy Name": "Belladonna", "Potency": "30C", "BOX Number": "B15", "Type": "Tincture", "Bottle Size": "30ml", "BottleCapColor": "Purple", "Manufacturer Brand": "Washington Homeopathics", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
+       //     { "Remedy Name": "Bryonia Alba", "Potency": "200C", "BOX Number": "B09", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Orange", "Manufacturer Brand": "Boiron", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
+         //   { "Remedy Name": "Calcarea Carbonica", "Potency": "1M", "BOX Number": "B22", "Type": "Pellets", "Bottle Size": "30ml", "BottleCapColor": "White", "Manufacturer Brand": "Hyland's", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
+           // { "Remedy Name": "Camphora", "Potency": "30C", "BOX Number": "B18", "Type": "Tincture", "Bottle Size": "15ml", "BottleCapColor": "Yellow", "Manufacturer Brand": "Washington Homeopathics", "Available": "No", "Reorder Y/N": "Yes", "Reorder Date": "2023-09-01" },
+            //{ "Remedy Name": "Cantharis", "Potency": "30C", "BOX Number": "B05", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Black", "Manufacturer Brand": "Boiron", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
+           // { "Remedy Name": "Chamomilla", "Potency": "200C", "BOX Number": "B11", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Pink", "Manufacturer Brand": "Hyland's", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
+            //{ "Remedy Name": "Ignatia Amara", "Potency": "30C", "BOX Number": "B14", "Type": "Tincture", "Bottle Size": "30ml", "BottleCapColor": "Brown", "Manufacturer Brand": "Washington Homeopathics", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" }
         ];
+// Replace the sample data initialization with this:
+async function fetchDataFromSheet(sheetUrl) {
+    try {
+        // Convert Google Sheet URL to API endpoint
+        const sheetId = sheetUrl.match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/)[1];
+        const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1?key=YOUR_API_KEY`;
+        
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        
+        // Convert to array of objects
+        const headers = data.values[0];
+        currentData = data.values.slice(1).map(row => {
+            const obj = {};
+            headers.forEach((header, index) => {
+                obj[header] = row[index] || '';
+            });
+            return obj;
+        });
+        
+        console.log('Data loaded:', currentData);
+    } catch (error) {
+        console.error('Error loading data:', error);
+        alert('Failed to load data from Google Sheet');
+    }
+}
+
 
         // DOM Elements
         const connectBtn = document.getElementById('connectBtn');
