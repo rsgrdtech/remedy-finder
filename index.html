@@ -125,6 +125,7 @@
             overflow: hidden;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
             transition: transform 0.3s ease;
+            cursor: pointer;
         }
         
         .result-card:hover {
@@ -261,6 +262,25 @@
             font-weight: 500;
         }
         
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
         @media (max-width: 768px) {
             .input-group {
                 flex-direction: column;
@@ -290,6 +310,7 @@
                     <input type="text" id="sheetUrl" placeholder="Paste Google Sheet URL here...">
                     <button id="connectBtn"><i class="fas fa-plug"></i> Connect</button>
                 </div>
+                <div id="connectionStatus"></div>
             </div>
             
             <div class="card">
@@ -330,47 +351,6 @@
     </div>
 
     <script>
-        // Sample data simulating Google Sheet data
-        //const sampleData = [
-          //  { "Remedy Name": "Aconitum Napellus", "Potency": "30C", "BOX Number": "B12", "Type": "Tincture", "Bottle Size": "30ml", "BottleCapColor": "Blue", "Manufacturer Brand": "Boiron", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
- //           { "Remedy Name": "Apis Mellifica", "Potency": "200C", "BOX Number": "B07", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Red", "Manufacturer Brand": "Hyland's", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
-   //         { "Remedy Name": "Arnica Montana", "Potency": "30C", "BOX Number": "B03", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Green", "Manufacturer Brand": "Boiron", "Available": "No", "Reorder Y/N": "Yes", "Reorder Date": "2023-08-15" },
-     //       { "Remedy Name": "Belladonna", "Potency": "30C", "BOX Number": "B15", "Type": "Tincture", "Bottle Size": "30ml", "BottleCapColor": "Purple", "Manufacturer Brand": "Washington Homeopathics", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
-       //     { "Remedy Name": "Bryonia Alba", "Potency": "200C", "BOX Number": "B09", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Orange", "Manufacturer Brand": "Boiron", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
-         //   { "Remedy Name": "Calcarea Carbonica", "Potency": "1M", "BOX Number": "B22", "Type": "Pellets", "Bottle Size": "30ml", "BottleCapColor": "White", "Manufacturer Brand": "Hyland's", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
-           // { "Remedy Name": "Camphora", "Potency": "30C", "BOX Number": "B18", "Type": "Tincture", "Bottle Size": "15ml", "BottleCapColor": "Yellow", "Manufacturer Brand": "Washington Homeopathics", "Available": "No", "Reorder Y/N": "Yes", "Reorder Date": "2023-09-01" },
-            //{ "Remedy Name": "Cantharis", "Potency": "30C", "BOX Number": "B05", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Black", "Manufacturer Brand": "Boiron", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
-           // { "Remedy Name": "Chamomilla", "Potency": "200C", "BOX Number": "B11", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Pink", "Manufacturer Brand": "Hyland's", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" },
-            //{ "Remedy Name": "Ignatia Amara", "Potency": "30C", "BOX Number": "B14", "Type": "Tincture", "Bottle Size": "30ml", "BottleCapColor": "Brown", "Manufacturer Brand": "Washington Homeopathics", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "" }
-        ];
-// Replace the sample data initialization with this:
-async function fetchDataFromSheet(sheetUrl) {
-    try {
-        // Convert Google Sheet URL to API endpoint
-        const sheetId = sheetUrl.match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/)[1];
-        const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1?key=YOUR_API_KEY`;
-        
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-        
-        // Convert to array of objects
-        const headers = data.values[0];
-        currentData = data.values.slice(1).map(row => {
-            const obj = {};
-            headers.forEach((header, index) => {
-                obj[header] = row[index] || '';
-            });
-            return obj;
-        });
-        
-        console.log('Data loaded:', currentData);
-    } catch (error) {
-        console.error('Error loading data:', error);
-        alert('Failed to load data from Google Sheet');
-    }
-}
-
-
         // DOM Elements
         const connectBtn = document.getElementById('connectBtn');
         const searchBtn = document.getElementById('searchBtn');
@@ -380,12 +360,10 @@ async function fetchDataFromSheet(sheetUrl) {
         const iframeContainer = document.getElementById('iframeContainer');
         const detailFrame = document.getElementById('detailFrame');
         const closeIframe = document.getElementById('closeIframe');
+        const connectionStatus = document.getElementById('connectionStatus');
 
         // State
         let currentData = [];
-
-        // Initialize with sample data
-        currentData = [...sampleData];
 
         // Event Listeners
         connectBtn.addEventListener('click', connectToSheet);
@@ -394,167 +372,52 @@ async function fetchDataFromSheet(sheetUrl) {
             iframeContainer.classList.remove('active');
         });
 
-        // Simulate connecting to Google Sheet
-        function connectToSheet() {
+        // Connect to Google Sheet
+        async function connectToSheet() {
             const url = sheetUrlInput.value.trim();
             
             if (!url) {
-                alert('Please enter a Google Sheet URL');
+                showConnectionMessage('Please enter a Google Sheet URL', 'error');
                 return;
             }
             
-            // In a real app, this would fetch data from the Google Sheet
-            // For demo purposes, we're using sample data
-            currentData = [...sampleData];
-            
-            // Show success message
-            alert('Connected to Google Sheet successfully!');
-            
-            // Clear previous results
-            resultsContainer.innerHTML = '<p style="text-align: center; color: #7f8c8d; padding: 40px;">Search for remedies to see results</p>';
-        }
-
-        // Perform search
-        function performSearch() {
-            const searchTerm = searchInput.value.trim();
-            
-            if (!searchTerm) {
-                alert('Please enter search terms');
-                return;
-            }
-            
-            // Parse search terms
-            const terms = searchTerm.split(',').map(term => term.trim());
-            
-            // Process each term
-            let results = [];
-            
-            terms.forEach(term => {
-                // Handle different search formats
-                let name = '';
-                let potency = '';
-                
-                // Check for common formats
-                if (term.includes(' ')) {
-                    const parts = term.split(' ');
-                    name = parts.slice(0, -1).join(' ');
-                    potency = parts[parts.length - 1];
-                } else if (/[0-9]/.test(term)) {
-                    // If term contains numbers, split at the number
-                    const match = term.match(/^(.*?)([0-9]+[CM]?)$/);
-                    if (match) {
-                        name = match[1];
-                        potency = match[2];
-                    } else {
-                        // Only potency provided
-                        potency = term;
-                    }
-                } else {
-                    // Only name provided
-                    name = term;
+            try {
+                // Extract sheet ID from URL
+                const sheetIdMatch = url.match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+                if (!sheetIdMatch) {
+                    showConnectionMessage('Invalid Google Sheet URL format', 'error');
+                    return;
                 }
                 
-                // Clean up name
-                name = name.replace(/\./g, '').trim();
+                const sheetId = sheetIdMatch[1];
                 
-                // Search in data
-                const matches = currentData.filter(item => {
-                    const itemName = item['Remedy Name'].toLowerCase().replace(/\./g, '');
-                    const itemPotency = item['Potency'].toLowerCase();
-                    
-                    // If both name and potency are provided
-                    if (name && potency) {
-                        return itemName.includes(name.toLowerCase()) && itemPotency === potency.toLowerCase();
-                    }
-                    // If only name is provided
-                    else if (name) {
-                        return itemName.includes(name.toLowerCase());
-                    }
-                    // If only potency is provided
-                    else if (potency) {
-                        return itemPotency === potency.toLowerCase();
-                    }
-                    return false;
-                });
+                // Use TableTop.js for simplicity (no API key needed)
+                // This is a workaround since we can't use Google Sheets API without server-side proxy
+                const tabletopUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
                 
-                results = [...results, ...matches];
-            });
-            
-            // Remove duplicates
-            results = results.filter((item, index, self) => 
-                index === self.findIndex(t => t['Remedy Name'] === item['Remedy Name'] && t['Potency'] === item['Potency'])
-            );
-            
-            displayResults(results);
-        }
-
-        // Display search results
-        function displayResults(results) {
-            if (results.length === 0) {
-                resultsContainer.innerHTML = '<p style="text-align: center; color: #e74c3c; padding: 40px;">No matching remedies found</p>';
-                return;
+                // Fetch data using JSONP approach
+                await fetchGoogleSheetData(sheetId);
+                
+            } catch (error) {
+                console.error('Connection error:', error);
+                showConnectionMessage('Failed to connect to Google Sheet. Please check the URL and ensure it\'s publicly accessible.', 'error');
             }
-            
-            resultsContainer.innerHTML = '';
-            
-            results.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'result-card';
-                
-                const reorderDate = item['Reorder Date'] ? `<span class="reorder-date">${item['Reorder Date']}</span>` : 'N/A';
-                const availableClass = item['Available'] === 'Yes' ? 'available-yes' : 'available-no';
-                const availableText = item['Available'] === 'Yes' ? 'In Stock' : 'Out of Stock';
-                
-                card.innerHTML = `
-                    <div class="card-header">
-                        ${item['Remedy Name']} ${item['Potency']}
-                    </div>
-                    <div class="card-body">
-                        <div class="info-row">
-                            <span class="label">BOX #:</span>
-                            <span class="value">${item['BOX Number']}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Type:</span>
-                            <span class="value">${item['Type']}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Size:</span>
-                            <span class="value">${item['Bottle Size']}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Cap Color:</span>
-                            <span class="value">${item['BottleCapColor']}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Brand:</span>
-                            <span class="value">${item['Manufacturer Brand']}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Available:</span>
-                            <span class="value ${availableClass}">${availableText}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Reorder Date:</span>
-                            <span class="value">${reorderDate}</span>
-                        </div>
-                    </div>
-                `;
-                
-                // Add click event to open detail page
-                card.addEventListener('click', () => {
-                    const remedyName = item['Remedy Name'].toLowerCase().replace(/\s+/g, '-');
-                    const detailUrl = `https://www.materiamedica.info/en/materia-medica/john-henry-clarke/${remedyName}`;
-                    detailFrame.src = detailUrl;
-                    iframeContainer.classList.add('active');
-                });
-                
-                resultsContainer.appendChild(card);
-            });
         }
 
-        // Initialize with sample results
-        displayResults(sampleData.slice(0, 4));
-    </script>
-</body>
-</html>
+        // Fetch data from Google Sheet using TableTop approach
+        async function fetchGoogleSheetData(sheetId) {
+            try {
+                // Using a CORS proxy to bypass restrictions
+                const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+                
+                const response = await fetch(proxyUrl + encodeURIComponent(sheetUrl));
+                const text = await response.text();
+                
+                // Extract JSON from Google's response
+                const jsonString = text.match(/google.visualization.Query.setResponse\(({.*})\);/);
+                if (!jsonString) {
+                    throw new Error('Invalid response format');
+                }
+                
+                const data = JSON.parse(jsonString[1]);*_
