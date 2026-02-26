@@ -212,6 +212,88 @@
             font-weight: 600;
         }
         
+        .iframe-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .iframe-container.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .iframe-wrapper {
+            width: 90%;
+            max-width: 1000px;
+            height: 85%;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #e74c3c;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1001;
+            font-size: 1.2rem;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .instructions {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 15px;
+            color: #0d47a1;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        .highlight {
+            background: #fff9c4;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+        
         .connection-status {
             position: fixed;
             top: 10px;
@@ -322,29 +404,22 @@
 </head>
 <body>
     <div class="container">
-        <div class="connection-status" id="connectionStatus"></div>
+    
         
         <header>
-            <h1><i class="fas fa-prescription-bottle-alt"></i> Remedy Search Application</h1>
-            <p class="subtitle">Search homeopathic remedies from your Google Sheet database and view detailed information</p>
+            <h1><i class="fas fa-prescription-bottle-alt"></i> Fremont Gurdwara-Homeopathic Remedy Searcher</h1>
         </header>
+    <div class="connection-status" id="connectionStatus"></div>
         
         <main>
-            <div class="card">
-                <h2 class="section-title"><i class="fas fa-search"></i> Search Remedies</h2>
-                <div class="instructions">
-                    <h3>Search Instructions:</h3>
-                    <ul>
-                        <li>Enter remedies as comma-separated pairs: <span class="highlight">Aconite30, Selenium 200</span></li>
-                        <li>Search for remedies that <strong>start with</strong> the entered text</li>
-                    </ul>
+                 <div class="instructions">
 
                     <div class="input-group">
                         <input type="text" id="searchInput" placeholder="Enter remedies (e.g. Aconite30, Selenium 200)">
                         <button id="searchBtn"><i class="fas fa-search"></i> Search</button>
                     </div>
                 </div>
-            </div>
+            
             
             <div class="data-container">
                 <div class="data-section">
@@ -367,9 +442,7 @@
                             <p>Select a remedy to view detailed information</p>
                         </div>
                     </div>
-                    <div class="instructions">
-                        <p><strong>Note:</strong> Detailed information is only available for in-stock remedies.</p>
-                    </div>
+                    
                 </div>
             </div>
         </main>
@@ -447,6 +520,7 @@
                         if (response.ok) break;
                     } catch (err) {
                         lastError = err;
+                        console.log(`Proxy ${proxy} failed, trying next...`);
                         continue;
                     }
                 }
@@ -463,7 +537,7 @@
                 
                 // Update UI for successful connection
                 body.style.backgroundColor = '#f0fff4'; // Light green background
-                connectionStatus.textContent = '✓ Successfully connected to Google Sheet';
+                connectionStatus.textContent = '✓ Data Source connected';
                 connectionStatus.className = 'connection-status status-success';
                 connectionStatus.style.display = 'block';
                 
@@ -472,7 +546,7 @@
                 
                 // Update UI for failed connection
                 body.style.backgroundColor = '#fff5f5'; // Light red background
-                connectionStatus.textContent = '✗ Failed to connect to Google Sheet';
+                connectionStatus.textContent = '✗ Data Source Connection Failed';
                 connectionStatus.className = 'connection-status status-error';
                 connectionStatus.style.display = 'block';
                 
@@ -641,10 +715,6 @@
                 const isAvailable = item['Available'] === 'Yes';
                 const headerClass = isAvailable ? 'available' : 'unavailable';
                 
-                // Find the correct field names - flexible matching
-                const sectionValue = getValueByPossibleKeys(item, ['Section', 'SECTION', 'Section #', 'section', 'SECTION_NUMBER']) || 'N/A';
-                const boxValue = getValueByPossibleKeys(item, ['BOX Number', 'BOX', 'Box Number', 'Box', 'BOX_NUMBER']) || 'N/A';
-                
                 accordionItem.innerHTML = `
                     <div class="accordion-header ${headerClass}">
                         <div class="accordion-details">
@@ -653,7 +723,7 @@
                                 ${isAvailable ? '<span class="available-yes">(Available)</span>' : '<span class="available-no">(Out of Stock)</span>'}
                             </div>
                             <div class="accordion-secondary-info">
-                                Box: ${boxValue} | Section: ${sectionValue}
+                                Box: ${item['BOX Number'] || 'N/A'} | Section: ${item['Section'] || 'N/A'}
                             </div>
                         </div>
                         <i class="fas fa-chevron-down"></i>
@@ -718,16 +788,6 @@
             });
         }
 
-        // Helper function to get value by trying multiple possible keys
-        function getValueByPossibleKeys(item, keys) {
-            for (const key of keys) {
-                if (item[key] && item[key].trim() !== '') {
-                    return item[key];
-                }
-            }
-            return null;
-        }
-
         // Update remedy info panel with URL content
         function updateRemedyInfo(item = null) {
             if (!item) {
@@ -762,6 +822,9 @@
                 <iframe src="${selectedRemedyUrl}"></iframe>
             `;
         }
+
+        // Initialize with sample data for demonstration
+        // This will be overridden by fetchGoogleSheetData() on load
     </script>
 </body>
 </html>
