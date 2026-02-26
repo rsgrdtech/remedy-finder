@@ -4,482 +4,764 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Remedy Search Application</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
         }
         
         body {
-            background: #f5f7fa;
-            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
+            padding: 20px;
+            color: #333;
+            transition: background-color 0.5s ease;
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            max-width: 800px;
             margin: 0 auto;
         }
         
         .card {
             background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            padding: 25px;
+            margin-bottom: 30px;
         }
         
-        h1, h2 {
-            color: #2c3e50;
-            margin-bottom: 15px;
+        .section-title {
+            font-size: 1.4rem;
+            color: #3498db;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title i {
+            margin-right: 10px;
         }
         
         .input-group {
             display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        input, button {
+            padding: 14px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
         }
         
         input {
             flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            background: #f8f9fa;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
         }
         
         button {
-            padding: 10px 20px;
             background: #3498db;
             color: white;
             border: none;
-            border-radius: 5px;
             cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         button:hover {
             background: #2980b9;
+            transform: translateY(-2px);
         }
         
-        #refreshBtn {
-            background: #e67e22;
+        button i {
+            margin-right: 8px;
         }
         
-        #refreshBtn:hover {
-            background: #d35400;
+        .accordion {
+            margin-top: 20px;
+            max-height: 600px;
+            overflow-y: auto;
         }
         
-        .status {
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-        }
-        
-        .success {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .loading {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-        
-        .results-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        
-        .remedy-item {
-            border: 1px solid #ddd;
+        .accordion-item {
+            background: white;
             border-radius: 8px;
-            padding: 15px;
             margin-bottom: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
             cursor: pointer;
+            border-left: 4px solid #3498db;
         }
         
-        .remedy-item.available {
-            border-left: 4px solid #27ae60;
-        }
-        
-        .remedy-item.unavailable {
-            border-left: 4px solid #e74c3c;
-        }
-        
-        .details-panel {
-            border: 1px solid #ddd;
-            border-radius: 8px;
+        .accordion-header {
             padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+        
+        .accordion-header.available {
+            background: #d4edda; /* Light green for available */
+        }
+        
+        .accordion-header.unavailable {
+            background: #f8d7da; /* Light red for unavailable */
+        }
+        
+        .accordion-header.active {
+            background: #e3f2fd;
+        }
+        
+        .accordion-content {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+        
+        .accordion-content.active {
+            padding: 15px;
+            max-height: 500px;
+        }
+        
+        .accordion-details {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        
+        .accordion-main-info {
+            flex: 1;
+        }
+        
+        .accordion-secondary-info {
+            text-align: right;
+            color: #7f8c8d;
         }
         
         .info-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 5px;
-            padding: 5px 0;
-            border-bottom: 1px solid #f0f0f0;
+            padding: 8px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
         }
         
         .label {
-            font-weight: bold;
-            color: #666;
+            font-weight: 500;
+            color: #7f8c8d;
+        }
+        
+        .value {
+            font-weight: 500;
+        }
+        
+        .available-yes {
+            color: #27ae60;
+            font-weight: 600;
+        }
+        
+        .available-no {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+        
+        .reorder-date {
+            color: #f39c12;
+            font-weight: 600;
+        }
+        
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-weight: 500;
+            z-index: 999;
+            display: none;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .data-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .data-section {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .info-section {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-section h3 {
+            color: #3498db;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .info-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .info-content iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 5px;
+        }
+        
+        .remedy-info {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .remedy-info:last-child {
+            border-bottom: none;
+        }
+        
+        .no-remedy-selected {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 40px 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            .data-container {
+                flex-direction: column;
+            }
+        }
+        
+        .search-summary {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #7f8c8d;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="card">
-            <h1>Remedy Search Application</h1>
-            <div class="input-group">
-                <input type="text" id="searchInput" placeholder="Search remedies...">
-                <button id="searchBtn">Search</button>
-                <button id="refreshBtn">Refresh Data</button>
-            </div>
-            <div id="status" class="status loading">Loading data from Google Sheets...</div>
-        </div>
+        <div class="connection-status" id="connectionStatus"></div>
         
-        <div class="results-grid">
+        <header>
+            <h1><i class="fas fa-prescription-bottle-alt"></i> Remedy Search Application</h1>
+            <p class="subtitle">Search homeopathic remedies from your Google Sheet database and view detailed information</p>
+        </header>
+        
+        <main>
             <div class="card">
-                <h2>Search Results</h2>
-                <div id="resultsContainer">
-                    <div style="text-align: center; color: #666; padding: 40px;">
-                        Loading remedies...
+                <h2 class="section-title"><i class="fas fa-search"></i> Search Remedies</h2>
+                <div class="instructions">
+                    <h3>Search Instructions:</h3>
+                    <ul>
+                        <li>Enter remedies as comma-separated pairs: <span class="highlight">Aconite30, Selenium 200</span></li>
+                        <li>Search for remedies that <strong>start with</strong> the entered text</li>
+                    </ul>
+
+                    <div class="input-group">
+                        <input type="text" id="searchInput" placeholder="Enter remedies (e.g. Aconite30, Selenium 200)">
+                        <button id="searchBtn"><i class="fas fa-search"></i> Search</button>
                     </div>
                 </div>
             </div>
             
-            <div class="card">
-                <h2>Remedy Details</h2>
-                <div id="detailsPanel" class="details-panel">
-                    <div style="text-align: center; color: #666; padding: 40px;">
-                        Select a remedy to view details
+            <div class="data-container">
+                <div class="data-section">
+                    <div class="card">
+                        <h2 class="section-title"><i class="fas fa-list"></i> Search Results <span id="resultsCount" class="accordion-count">(0 results)</span></h2>
+                        <div id="searchSummary"></div>
+                        <div class="accordion" id="resultsContainer">
+                            <!-- Results will be populated here as accordion items -->
+                            <div class="no-remedy-selected">
+                                <p>Search for remedies to see results here</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3><i class="fas fa-info-circle"></i> Remedy Details</h3>
+                    <div class="info-content" id="remedyInfo">
+                        <div class="no-remedy-selected">
+                            <p>Select a remedy to view detailed information</p>
+                        </div>
+                    </div>
+                    <div class="instructions">
+                        <p><strong>Note:</strong> Detailed information is only available for in-stock remedies.</p>
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 
     <script>
-        // Simple configuration
-        const SHEET_ID = '11aZgt8hafBHfu0ZHeuyQH_MS09791YHXy_r-7LWc8KM';
-        
-        // DOM elements
+        // DOM Elements
         const searchBtn = document.getElementById('searchBtn');
-        const refreshBtn = document.getElementById('refreshBtn');
         const searchInput = document.getElementById('searchInput');
         const resultsContainer = document.getElementById('resultsContainer');
-        const detailsPanel = document.getElementById('detailsPanel');
-        const statusDiv = document.getElementById('status');
+        const remedyInfo = document.getElementById('remedyInfo');
+        const resultsCount = document.getElementById('resultsCount');
+        const searchSummary = document.getElementById('searchSummary');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const body = document.body;
+
+        // State
+        let currentData = [];
+        let currentResults = [];
+        let isConnected = false;
+        let activeAccordion = null;
+        let selectedRemedyUrl = '';
         
-        let remediesData = [];
+        // Hardcoded Google Sheet URL
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/11aZgt8hafBHfu0ZHeuyQH_MS09791YHXy_r-7LWc8KM/edit?usp=sharing';
+
+        // Event Listeners
+        searchBtn.addEventListener('click', () => performSearch(true));
         
-        // Initialize
-        document.addEventListener('DOMContentLoaded', loadData);
-        
-        // Event listeners
-        searchBtn.addEventListener('click', performSearch);
-        refreshBtn.addEventListener('click', loadData);
-        searchInput.addEventListener('input', performSearch);
-        
-        // Load data function
-        async function loadData() {
+        // Type-ahead search
+        searchInput.addEventListener('input', () => {
+            performSearch(false);
+        });
+
+        // Load Google Sheet data on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchGoogleSheetData();
+        });
+
+        // Fetch data from Google Sheet using CSV export
+        async function fetchGoogleSheetData() {
             try {
-                showStatus('Loading data from Google Sheets...', 'loading');
-                refreshBtn.disabled = true;
+                // Extract sheet ID from URL
+                const sheetIdMatch = SHEET_URL.match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+                if (!sheetIdMatch) {
+                    throw new Error('Invalid Google Sheet URL format');
+                }
                 
-                // Try direct CSV access first
-                const csvUrl = https://docs.google.com/spreadsheets/d/e/2PACX-1vTKnCNTL2WzTz9aOp-RrjlK_uO3rV9SlKbng2BQ5KKyCsPjTO0CAij58lr9JbAi-c3d0KBBa-XYUJZI/pub?gid=369787331&single=true&output=csv
-		//const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
+                const sheetId = sheetIdMatch[1];
                 
-                console.log('Fetching from:', csvUrl);
+                // Try CSV export method
+                const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
                 
-                const response = await fetch(csvUrl);
+                // Try multiple CORS proxies with fallbacks
+                const proxies = [
+                    'https://corsproxy.io/?',
+                    'https://api.codetabs.com/v1/proxy?quest=',
+                    'https://cors-anywhere.herokuapp.com/'
+                ];
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                let response;
+                let lastError;
+                
+                // Try each proxy until one works
+                for (const proxy of proxies) {
+                    try {
+                        const proxyUrl = proxy + encodeURIComponent(csvUrl);
+                        response = await fetch(proxyUrl, {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'text/csv'
+                            }
+                        });
+                        
+                        if (response.ok) break;
+                    } catch (err) {
+                        lastError = err;
+                        continue;
+                    }
+                }
+                
+                if (!response || !response.ok) {
+                    throw new Error('All proxies failed: ' + (lastError?.message || 'Unknown error'));
                 }
                 
                 const csvText = await response.text();
-                console.log('Raw CSV data:', csvText.substring(0, 500) + '...');
+                currentData = parseCSV(csvText);
                 
-                remediesData = parseCSV(csvText);
-                console.log('Parsed data:', remediesData);
+                console.log('Data loaded:', currentData);
+                isConnected = true;
                 
-                if (remediesData.length === 0) {
-                    throw new Error('No data found in sheet');
-                }
-                
-                showStatus(`Successfully loaded ${remediesData.length} remedies`, 'success');
-                performSearch();
+                // Update UI for successful connection
+                body.style.backgroundColor = '#f0fff4'; // Light green background
+                connectionStatus.textContent = '✓ Successfully connected to Google Sheet';
+                connectionStatus.className = 'connection-status status-success';
+                connectionStatus.style.display = 'block';
                 
             } catch (error) {
-                console.error('Error loading data:', error);
-                showStatus('Error loading from Google Sheets. Using sample data.', 'error');
+                console.error('Data fetch error:', error);
+                
+                // Update UI for failed connection
+                body.style.backgroundColor = '#fff5f5'; // Light red background
+                connectionStatus.textContent = '✗ Failed to connect to Google Sheet';
+                connectionStatus.className = 'connection-status status-error';
+                connectionStatus.style.display = 'block';
+                
+                // Fallback to sample data
                 useSampleData();
-            } finally {
-                refreshBtn.disabled = false;
             }
         }
-        
-        // Parse CSV data
+
+        // Parse CSV data into array of objects
         function parseCSV(csvText) {
             const lines = csvText.split('\n').filter(line => line.trim());
-            if (lines.length < 2) {
-                console.log('Not enough lines in CSV');
-                return [];
-            }
+            if (lines.length < 2) return [];
             
-            // Parse headers
-            const headers = parseCSVLine(lines[0]);
-            console.log('Headers:', headers);
-            
+            const headers = lines[0].split(',').map(h => h.trim());
             const data = [];
             
             for (let i = 1; i < lines.length; i++) {
-                const values = parseCSVLine(lines[i]);
+                const values = lines[i].split(',').map(v => v.trim());
+                const obj = {};
                 
-                if (values.length !== headers.length) {
-                    console.log('Skipping line - column count mismatch:', values);
-                    continue;
-                }
-                
-                const item = {};
                 headers.forEach((header, index) => {
-                    item[header] = values[index] || '';
+                    obj[header] = values[index] || '';
                 });
                 
-                // Validate required fields
-                if (item['Remedy Name'] && item['Potency']) {
-                    data.push(item);
-                }
+                data.push(obj);
             }
             
             return data;
         }
-        
-        // Proper CSV line parsing
-        function parseCSVLine(line) {
-            const values = [];
-            let current = '';
-            let inQuotes = false;
-            
-            for (let i = 0; i < line.length; i++) {
-                const char = line[i];
-                
-                if (char === '"') {
-                    inQuotes = !inQuotes;
-                } else if (char === ',' && !inQuotes) {
-                    values.push(current.trim());
-                    current = '';
-                } else {
-                    current += char;
-                }
-            }
-            
-            values.push(current.trim());
-            return values;
-        }
-        
+
         // Use sample data as fallback
         function useSampleData() {
-            remediesData = [
-                {
-                    "Remedy Name": "Arnica Montana",
-                    "Potency": "30C",
-                    "BOX Number": "B12",
-                    "Type": "Pellets",
-                    "Bottle Size": "30ml",
-                    "BottleCapColor": "Blue",
-                    "Manufacturer Brand": "Boiron",
-                    "Available": "Yes",
-                    "Reorder Y/N": "No",
-                    "Reorder Date": "",
-                    "Section": "A-1"
-                },
-                {
-                    "Remedy Name": "Belladonna",
-                    "Potency": "200C", 
-                    "BOX Number": "B07",
-                    "Type": "Tincture",
-                    "Bottle Size": "15ml",
-                    "BottleCapColor": "Red",
-                    "Manufacturer Brand": "Hyland's",
-                    "Available": "Yes",
-                    "Reorder Y/N": "No",
-                    "Reorder Date": "",
-                    "Section": "B-2"
-                },
-                {
-                    "Remedy Name": "Aconitum Napellus",
-                    "Potency": "30C",
-                    "BOX Number": "B03",
-                    "Type": "Pellets", 
-                    "Bottle Size": "15ml",
-                    "BottleCapColor": "Green",
-                    "Manufacturer Brand": "Boiron",
-                    "Available": "No",
-                    "Reorder Y/N": "Yes",
-                    "Reorder Date": "2023-08-15",
-                    "Section": "C-1"
-                }
+            const sampleData = [
+                { "Remedy Name": "Aconitum Napellus", "Potency": "30C", "BOX Number": "B12", "Type": "Tincture", "Bottle Size": "30ml", "BottleCapColor": "Blue", "Manufacturer Brand": "Boiron", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "", "Section": "A-1" },
+                { "Remedy Name": "Apis Mellifica", "Potency": "200C", "BOX Number": "B07", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Red", "Manufacturer Brand": "Hyland's", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "", "Section": "A-2" },
+                { "Remedy Name": "Arnica Montana", "Potency": "30C", "BOX Number": "B03", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Green", "Manufacturer Brand": "Boiron", "Available": "No", "Reorder Y/N": "Yes", "Reorder Date": "2023-08-15", "Section": "B-1" },
+                { "Remedy Name": "Belladonna", "Potency": "30C", "BOX Number": "B15", "Type": "Tincture", "Bottle Size": "30ml", "BottleCapColor": "Purple", "Manufacturer Brand": "Washington Homeopathics", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "", "Section": "B-2" },
+                { "Remedy Name": "Bryonia Alba", "Potency": "200C", "BOX Number": "B09", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Orange", "Manufacturer Brand": "Boiron", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "", "Section": "C-1" },
+                { "Remedy Name": "Calcarea Carbonica", "Potency": "1M", "BOX Number": "B22", "Type": "Pellets", "Bottle Size": "30ml", "BottleCapColor": "White", "Manufacturer Brand": "Hyland's", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "", "Section": "C-2" },
+                { "Remedy Name": "Camphora", "Potency": "30C", "BOX Number": "B18", "Type": "Tincture", "Bottle Size": "15ml", "BottleCapColor": "Yellow", "Manufacturer Brand": "Washington Homeopathics", "Available": "No", "Reorder Y/N": "Yes", "Reorder Date": "2023-09-01", "Section": "D-1" },
+                { "Remedy Name": "Cantharis", "Potency": "30C", "BOX Number": "B05", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Black", "Manufacturer Brand": "Boiron", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "", "Section": "D-2" },
+                { "Remedy Name": "Chamomilla", "Potency": "200C", "BOX Number": "B11", "Type": "Pellets", "Bottle Size": "15ml", "BottleCapColor": "Pink", "Manufacturer Brand": "Hyland's", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "", "Section": "E-1" },
+                { "Remedy Name": "Ignatia Amara", "Potency": "30C", "BOX Number": "B14", "Type": "Tincture", "Bottle Size": "30ml", "BottleCapColor": "Brown", "Manufacturer Brand": "Washington Homeopathics", "Available": "Yes", "Reorder Y/N": "No", "Reorder Date": "", "Section": "E-2" }
             ];
             
-            performSearch();
+            currentData = sampleData;
+            isConnected = false;
+            performSearch(false);
         }
-        
-        // Perform search
-        function performSearch() {
-            const searchTerm = searchInput.value.trim().toLowerCase();
+
+        // Perform search (show both in-stock and out-of-stock remedies)
+        function performSearch(showAlert) {
+            const searchTerm = searchInput.value.trim();
             
-            if (remediesData.length === 0) {
-                resultsContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 40px;">No data available</div>';
+            if (showAlert && !searchTerm) {
+                alert('Please enter search terms');
                 return;
             }
             
-            let results = remediesData;
-            
-            if (searchTerm) {
-                results = remediesData.filter(remedy => {
-                    const name = (remedy['Remedy Name'] || '').toLowerCase();
-                    const potency = (remedy['Potency'] || '').toLowerCase();
-                    
-                    return name.includes(searchTerm) || potency.includes(searchTerm);
-                });
+            if (currentData.length === 0) {
+                if (showAlert) alert('Please wait for data to load');
+                return;
             }
             
+            // Parse search terms
+            const terms = searchTerm.split(',').map(term => term.trim());
+            
+            // Process each term
+            let results = [];
+            
+            terms.forEach(term => {
+                // Handle different search formats
+                let name = '';
+                let potency = '';
+                
+                // Check for common formats
+                if (term.includes(' ')) {
+                    const parts = term.split(' ');
+                    name = parts.slice(0, -1).join(' ');
+                    potency = parts[parts.length - 1];
+                } else if (/[0-9]/.test(term)) {
+                    // If term contains numbers, split at the number
+                    const match = term.match(/^(.*?)([0-9]+[CM]?)$/);
+                    if (match) {
+                        name = match[1];
+                        potency = match[2];
+                    } else {
+                        // Only potency provided
+                        potency = term;
+                    }
+                } else {
+                    // Only name provided
+                    name = term;
+                }
+                
+                // Clean up name
+                name = name.replace(/\./g, '').trim();
+                
+                // Search in data - Include all remedies (both in-stock and out-of-stock)
+                const matches = currentData.filter(item => {
+                    const itemName = item['Remedy Name'] ? item['Remedy Name'].toLowerCase().replace(/\./g, '') : '';
+                    const itemPotency = item['Potency'] ? item['Potency'].toLowerCase() : '';
+                    
+                    // If both name and potency are provided
+                    if (name && potency) {
+                        // Search from the beginning of the name (not substring)
+                        return itemName.toLowerCase().startsWith(name.toLowerCase()) && itemPotency === potency.toLowerCase();
+                    }
+                    // If only name is provided
+                    else if (name) {
+                        // Search from the beginning of the name (not substring)
+                        return itemName.toLowerCase().startsWith(name.toLowerCase());
+                    }
+                    // If only potency is provided
+                    else if (potency) {
+                        return itemPotency === potency.toLowerCase();
+                    }
+                    return false;
+                });
+                
+                results = [...results, ...matches];
+            });
+            
+            // Remove duplicates
+            results = results.filter((item, index, self) => 
+                index === self.findIndex(t => t['Remedy Name'] === item['Remedy Name'] && t['Potency'] === item['Potency'])
+            );
+            
+            currentResults = results;
+            activeAccordion = null;
             displayResults(results);
+            updateRemedyInfo();
+            updateSearchSummary(results);
         }
-        
-        // Display results
+
+        // Update search summary
+        function updateSearchSummary(results) {
+            const inStockCount = results.filter(item => item['Available'] === 'Yes').length;
+            const outOfStockCount = results.filter(item => item['Available'] !== 'Yes').length;
+            
+            searchSummary.innerHTML = `
+                <div class="search-summary">
+                    Found ${results.length} remedy(s): 
+                    <span class="available-yes">${inStockCount} in stock</span>, 
+                    <span class="available-no">${outOfStockCount} out of stock</span>
+                </div>
+            `;
+        }
+
+        // Display search results as accordion
         function displayResults(results) {
+            resultsCount.textContent = `(${results.length} remedies)`;
+            
             if (results.length === 0) {
-                resultsContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 40px;">No remedies found</div>';
-                detailsPanel.innerHTML = '<div style="text-align: center; color: #666; padding: 40px;">Select a remedy to view details</div>';
+                resultsContainer.innerHTML = '<div class="no-remedy-selected"><p>No matching remedies found</p></div>';
                 return;
             }
             
             resultsContainer.innerHTML = '';
             
-            results.forEach((remedy, index) => {
-                const isAvailable = remedy['Available'] === 'Yes';
-                const item = document.createElement('div');
-                item.className = `remedy-item ${isAvailable ? 'available' : 'unavailable'}`;
+            results.forEach((item, index) => {
+                const accordionItem = document.createElement('div');
+                accordionItem.className = 'accordion-item';
                 
-                item.innerHTML = `
-                    <div style="font-weight: bold; margin-bottom: 5px;">
-                        ${remedy['Remedy Name']} ${remedy['Potency']}
-                        <span style="color: ${isAvailable ? '#27ae60' : '#e74c3c'}; font-size: 0.9em;">
-                            (${isAvailable ? 'Available' : 'Out of Stock'})
-                        </span>
+                const needsReorder = item['Reorder Y/N'] === 'Yes' ? '<span style="color:#e74c3c;font-weight:600">(Needs Reorder)</span>' : '';
+                const isAvailable = item['Available'] === 'Yes';
+                const headerClass = isAvailable ? 'available' : 'unavailable';
+                
+                // Find the correct field names - flexible matching
+                const sectionValue = getValueByPossibleKeys(item, ['Section', 'SECTION', 'Section #', 'section', 'SECTION_NUMBER']) || 'N/A';
+                const boxValue = getValueByPossibleKeys(item, ['BOX Number', 'BOX', 'Box Number', 'Box', 'BOX_NUMBER']) || 'N/A';
+                
+                accordionItem.innerHTML = `
+                    <div class="accordion-header ${headerClass}">
+                        <div class="accordion-details">
+                            <div class="accordion-main-info">
+                                ${item['Remedy Name']} ${item['Potency']}
+                                ${isAvailable ? '<span class="available-yes">(Available)</span>' : '<span class="available-no">(Out of Stock)</span>'}
+                            </div>
+                            <div class="accordion-secondary-info">
+                                Box: ${boxValue} | Section: ${sectionValue}
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
                     </div>
-                    <div style="color: #666; font-size: 0.9em;">
-                        Box: ${remedy['BOX Number'] || 'N/A'} | Section: ${remedy['Section'] || 'N/A'}
+                    <div class="accordion-content">
+                        <div class="info-row">
+                            <span class="label">Type:</span>
+                            <span class="value">${item['Type'] || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Size:</span>
+                            <span class="value">${item['Bottle Size'] || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Cap Color:</span>
+                            <span class="value">${item['BottleCapColor'] || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Brand:</span>
+                            <span class="value">${item['Manufacturer Brand'] || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Reorder Date:</span>
+                            <span class="value">${item['Reorder Date'] || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Status:</span>
+                            <span class="value">${needsReorder || 'No reorder needed'}</span>
+                        </div>
                     </div>
                 `;
                 
-                item.addEventListener('click', () => {
-                    // Remove selection from all items
-                    document.querySelectorAll('.remedy-item').forEach(i => {
-                        i.style.background = '';
-                    });
+                // Add click event to toggle accordion
+                const header = accordionItem.querySelector('.accordion-header');
+                header.addEventListener('click', () => {
+                    // Close previous active accordion
+                    if (activeAccordion && activeAccordion !== accordionItem) {
+                        activeAccordion.querySelector('.accordion-header').classList.remove('active');
+                        activeAccordion.querySelector('.accordion-content').classList.remove('active');
+                        activeAccordion.querySelector('.fa-chevron-down').classList.remove('fa-rotate-180');
+                    }
                     
-                    // Highlight selected item
-                    item.style.background = '#f0f8ff';
+                    // Toggle current accordion
+                    const isActive = header.classList.contains('active');
                     
-                    // Show details
-                    showRemedyDetails(remedy);
+                    if (isActive) {
+                        header.classList.remove('active');
+                        accordionItem.querySelector('.accordion-content').classList.remove('active');
+                        accordionItem.querySelector('.fa-chevron-down').classList.remove('fa-rotate-180');
+                        activeAccordion = null;
+                        updateRemedyInfo();
+                    } else {
+                        header.classList.add('active');
+                        accordionItem.querySelector('.accordion-content').classList.add('active');
+                        accordionItem.querySelector('.fa-chevron-down').classList.add('fa-rotate-180');
+                        activeAccordion = accordionItem;
+                        updateRemedyInfo(item);
+                    }
                 });
                 
-                resultsContainer.appendChild(item);
+                resultsContainer.appendChild(accordionItem);
             });
         }
-        
-        // Show remedy details
-        function showRemedyDetails(remedy) {
-            const isAvailable = remedy['Available'] === 'Yes';
-            const remedyName = (remedy['Remedy Name'] || '').toLowerCase().replace(/\s+/g, '-');
-            const detailUrl = `https://www.materiamedica.info/en/materia-medica/john-henry-clarke/${remedyName}`;
+
+        // Helper function to get value by trying multiple possible keys
+        function getValueByPossibleKeys(item, keys) {
+            for (const key of keys) {
+                if (item[key] && item[key].trim() !== '') {
+                    return item[key];
+                }
+            }
+            return null;
+        }
+
+        // Update remedy info panel with URL content
+        function updateRemedyInfo(item = null) {
+            if (!item) {
+                remedyInfo.innerHTML = '<div class="no-remedy-selected"><p>Select a remedy to view detailed information</p></div>';
+                selectedRemedyUrl = '';
+                return;
+            }
             
-            detailsPanel.innerHTML = `
-                <h3>${remedy['Remedy Name']} ${remedy['Potency']}</h3>
-                
-                <div class="info-row">
-                    <span class="label">Status:</span>
-                    <span style="color: ${isAvailable ? '#27ae60' : '#e74c3c'}">
-                        ${isAvailable ? 'In Stock' : 'Out of Stock'}
-                    </span>
-                </div>
-                
-                <div class="info-row">
-                    <span class="label">Box Number:</span>
-                    <span>${remedy['BOX Number'] || 'N/A'}</span>
-                </div>
-                
-                <div class="info-row">
-                    <span class="label">Section:</span>
-                    <span>${remedy['Section'] || 'N/A'}</span>
-                </div>
-                
-                <div class="info-row">
-                    <span class="label">Type:</span>
-                    <span>${remedy['Type'] || 'N/A'}</span>
-                </div>
-                
-                <div class="info-row">
-                    <span class="label">Bottle Size:</span>
-                    <span>${remedy['Bottle Size'] || 'N/A'}</span>
-                </div>
-                
-                <div class="info-row">
-                    <span class="label">Cap Color:</span>
-                    <span>${remedy['BottleCapColor'] || 'N/A'}</span>
-                </div>
-                
-                <div class="info-row">
-                    <span class="label">Brand:</span>
-                    <span>${remedy['Manufacturer Brand'] || 'N/A'}</span>
-                </div>
-                
-                <div class="info-row">
-                    <span class="label">Reorder Needed:</span>
-                    <span>${remedy['Reorder Y/N'] || 'N/A'}</span>
-                </div>
-                
-                <div class="info-row">
-                    <span class="label">Reorder Date:</span>
-                    <span>${remedy['Reorder Date'] || 'N/A'}</span>
-                </div>
-                
-                ${isAvailable ? `
-                    <div style="margin-top: 20px;">
-                        <iframe 
-                            src="${detailUrl}" 
-                            style="width: 100%; height: 300px; border: 1px solid #ddd; border-radius: 5px;">
-                        </iframe>
+            // Only show detailed info for in-stock remedies
+            if (item['Available'] !== 'Yes') {
+                remedyInfo.innerHTML = `
+                    <div class="remedy-info">
+                        <h4>${item['Remedy Name']} ${item['Potency']}</h4>
+                        <p><strong>Status:</strong> <span class="available-no">Out of Stock</span></p>
+                        <p>Detailed information is only available for in-stock remedies.</p>
                     </div>
-                ` : `
-                    <div style="margin-top: 20px; color: #e74c3c;">
-                        Detailed information unavailable for out-of-stock remedies
-                    </div>
-                `}
+                `;
+                selectedRemedyUrl = '';
+                return;
+            }
+            
+            // Generate URL for remedy details
+            const remedyName = item['Remedy Name'] ? item['Remedy Name'].toLowerCase().replace(/\s+/g, '-') : '';
+            selectedRemedyUrl = `https://www.materiamedica.info/en/materia-medica/john-henry-clarke/${remedyName}`;
+            
+            // Display the URL content directly in an iframe
+            remedyInfo.innerHTML = `
+                <div class="remedy-info">
+                    <h4>${item['Remedy Name']} ${item['Potency']}</h4>
+                    <p><strong>Online Reference:</strong> <a href="${selectedRemedyUrl}" target="_blank">${selectedRemedyUrl}</a></p>
+                </div>
+                <iframe src="${selectedRemedyUrl}"></iframe>
             `;
         }
-        
-        // Show status message
-        function showStatus(message, type) {
-            statusDiv.textContent = message;
-            statusDiv.className = `status ${type}`;
-        }
-        
-        // Load data immediately
-        loadData();
     </script>
 </body>
 </html>
